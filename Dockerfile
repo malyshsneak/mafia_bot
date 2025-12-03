@@ -1,31 +1,24 @@
-# Используем официальный образ Python 3.13
-FROM python:3.13-slim
+# Используем стабильный Python 3.11
+FROM python:3.11-slim
 
-# Обновим pip и установим необходимые инструменты для сборки Rust
+# Устанавливаем системные зависимости
 RUN apt-get update && apt-get install -y \
     build-essential \
-    curl \
+    libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Устанавливаем Rust для pydantic-core
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
-
-# Создаём рабочую директорию
+# Создаем рабочую директорию
 WORKDIR /app
 
-# Копируем зависимости
+# Копируем файлы с зависимостями
 COPY requirements.txt .
 
-# Устанавливаем зависимости
+# Обновляем pip и устанавливаем зависимости
 RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем код бота
-COPY main.py .
+# Копируем весь код бота
+COPY . .
 
-# Экспортируем переменные окружения (твой токен)
-ENV BOT_TOKEN=8598398574:AAEwWXrv_WXb5xfyH7nN9c4V_5Q7pO_n9oE
-
-# Команда запуска бота
+# Запускаем бота
 CMD ["python", "main.py"]
