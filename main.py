@@ -1,34 +1,27 @@
 import asyncio
-import logging
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
-# Токен бота
 TOKEN = "8598398574:AAEwWXrv_WXb5xfyH7nN9c4V_5Q7pO_n9oE"
 
-# Инициализация бота и диспетчера
 bot = Bot(token=TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 
-# Главное меню
-def main_menu():
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="Расписание игр"), KeyboardButton(text="Профиль")],
-            [KeyboardButton(text="Достижения"), KeyboardButton(text="Рейтинг")]
-        ],
-        resize_keyboard=True
-    )
-    return keyboard
-
 # Команда /start
-@dp.message(Command("start"))
+@dp.message(Command(commands=["start"]))
 async def start(message: types.Message):
-    await message.answer("Главное меню", reply_markup=main_menu())
+    keyboard = ReplyKeyboardBuilder()
+    keyboard.button(text="Расписание игр")
+    keyboard.button(text="Профиль")
+    keyboard.button(text="Достижения")
+    keyboard.button(text="Рейтинг")
+    keyboard.adjust(2)  # 2 кнопки в ряд
+    await message.answer("Главное меню", reply_markup=keyboard.as_markup(resize_keyboard=True))
 
 if __name__ == "__main__":
+    import logging
     logging.basicConfig(level=logging.INFO)
     asyncio.run(dp.start_polling(bot))
