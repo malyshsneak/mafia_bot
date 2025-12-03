@@ -1,46 +1,33 @@
-import asyncio
-from aiogram import Bot, Dispatcher, types
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from aiohttp import web
 import os
+from aiogram import Bot, Dispatcher, types
+from aiogram.types import WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.filters import Command
+from aiogram import F
+from dotenv import load_dotenv
+from aiogram.types.web_app_info import WebAppInfo
 
-TOKEN = os.getenv("BOT_TOKEN")  # Убедись, что токен в Environment Variables на Render
+load_dotenv()
 
+TOKEN = os.getenv("BOT_TOKEN")
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Главное меню
-keyboard_main = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="Расписание игр")],
-        [KeyboardButton(text="Другое")]
-    ],
-    resize_keyboard=True
-)
+# Главная клавиатура
+def main_menu_kb():
+    kb = InlineKeyboardBuilder()
+    kb.button(
+        text="Расписание игр",
+        web_app=WebAppInfo(url=f"{os.getenv('WEBAPP_URL')}/index.html")
+    )
+    return kb.as_markup()
 
-@dp.message(commands=["start"])
-async def start_handler(message: types.Message):
-    await message.answer("Главное меню", reply_markup=keyboard_main)
+@dp.message(Command("start"))
+async def start(msg: types.Message):
+    await msg.answer("Главное меню", reply_markup=main_menu_kb())
 
-@dp.message(lambda message: message.text == "Расписание игр")
-async def schedule_handler(message: types.Message):
-    # Мини-приложение имитация выбора игры
-    games = ["Игра 1", "Игра 2", "Игра 3"]
-    text = "Выберите игру:\n" + "\n".join(f"{i+1}. {g}" for i, g in enumerate(games))
-    await message.answer(text)
+if __name__ == "__main__":
+    import asyncio
+    from aiogram import executor
 
-async def main():
-    # Запуск polling
-    await dp.start_polling(bot)
-
-# Фиктивный сервер для Render
-async def handle(request):
-    return web.Response(text="OK")
-
-app = web.Application()
-app.add_routes([web.get("/", handle)])
-
-# Запускаем одновременно polling и сервер
-loop = asyncio.get_event_loop()
-loop.create_task(main())
-web.run_app(app, port=10000)
+    asyncio.run(dp.start_polling(bot))
