@@ -1,40 +1,46 @@
-import os
+import asyncio
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.types import InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiohttp import web
+import os
 
-API_TOKEN = os.getenv("BOT_TOKEN")  # твой токен, добавленный в Render
+TOKEN = os.getenv("BOT_TOKEN")  # Убедись, что токен в Environment Variables на Render
 
-bot = Bot(token=API_TOKEN)
+bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Главное меню с кнопкой "Расписание игр"
+# Главное меню
+keyboard_main = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Расписание игр")],
+        [KeyboardButton(text="Другое")]
+    ],
+    resize_keyboard=True
+)
+
 @dp.message(commands=["start"])
-async def cmd_start(message: types.Message):
-    keyboard = InlineKeyboardBuilder()
-    keyboard.add(InlineKeyboardButton(text="Расписание игр", callback_data="schedule"))
-    await message.answer("Главное меню", reply_markup=keyboard.as_markup())
+async def start_handler(message: types.Message):
+    await message.answer("Главное меню", reply_markup=keyboard_main)
 
-# Обработка нажатия кнопки "Расписание игр"
-@dp.callback_query(lambda c: c.data == "schedule")
-async def show_schedule(callback_query: types.CallbackQuery):
-    # Mini app с выбором игр
-    keyboard = InlineKeyboardBuilder()
-    keyboard.add(
-        InlineKeyboardButton(text="Игра 1", callback_data="game_1"),
-        InlineKeyboardButton(text="Игра 2", callback_data="game_2"),
-        InlineKeyboardButton(text="Игра 3", callback_data="game_3"),
-    )
-    await callback_query.message.edit_text(
-        "Выберите игру:", reply_markup=keyboard.as_markup()
-    )
+@dp.message(lambda message: message.text == "Расписание игр")
+async def schedule_handler(message: types.Message):
+    # Мини-приложение имитация выбора игры
+    games = ["Игра 1", "Игра 2", "Игра 3"]
+    text = "Выберите игру:\n" + "\n".join(f"{i+1}. {g}" for i, g in enumerate(games))
+    await message.answer(text)
 
-# Обработка выбора игры
-@dp.callback_query(lambda c: c.data.startswith("game_"))
-async def game_selected(callback_query: types.CallbackQuery):
-    await callback_query.answer(f"Вы выбрали {callback_query.data.replace('game_', 'Игра ')}")
+async def main():
+    # Запуск polling
+    await dp.start_polling(bot)
 
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(dp.start_polling(bot))
+# Фиктивный сервер для Render
+async def handle(request):
+    return web.Response(text="OK")
+
+app = web.Application()
+app.add_routes([web.get("/", handle)])
+
+# Запускаем одновременно polling и сервер
+loop = asyncio.get_event_loop()
+loop.create_task(main())
+web.run_app(app, port=10000)
