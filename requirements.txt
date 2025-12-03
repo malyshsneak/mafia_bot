@@ -1,7 +1,6 @@
-aiogram==2.26.1
+aiogram==3.22.0
 aiohttp
 aiofiles
 python-dotenv
 magic-filter
 typing-extensions
-
