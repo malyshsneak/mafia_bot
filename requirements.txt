@@ -1,0 +1,6 @@
+aiogram==3.22
+aiohttp
+aiofiles
+python-dotenv
+magic-filter
+typing-extensions
