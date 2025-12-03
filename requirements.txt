@@ -1,6 +1,7 @@
-aiogram==2.26.1
+aiogram==2.25.2
 aiohttp==3.9.5
 aiofiles==23.2.1
 python-dotenv==1.0.1
 magic-filter==1.0.12
 typing-extensions==4.12.2
+
